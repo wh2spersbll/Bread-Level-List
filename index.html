@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bread level list</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { margin: 0; background: #08080C; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+const { useState, useEffect } = React;
+
+// ---- Design tokens ----
+// bg: #0B0B10 (deep ink) | accent: #6C5CE7 (violet) | accent-2: #34D6C4 (cyan) | accent-3: #FF5FA2 (magenta)
+// ink: #F4F3F8 | muted: #8B8CA3 | display: Space Grotesk | body: Inter | data/mono: JetBrains Mono
+
+// ---- LocalStorage-backed "memory" so the site remembers state per browser ----
+function usePersistentState(key, initial) {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : initial;
+    } catch {
+      return initial;
+    }
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+    } catch {}
+  }, [key, state]);
+  return [state, state === undefined ? () => {} : setState, setState];
+}
+
+const OWNER_USERNAME = "kawaii vyrien";
+const OWNER_PASSWORD = "vyrienchangepassword";
+
+const HUES = [
+  ["#6C5CE7", "#34D6C4"],
+  ["#FF5FA2", "#6C5CE7"],
+  ["#34D6C4", "#FF5FA2"],
+  ["#6C5CE7", "#FF5FA2"],
+  ["#34D6C4", "#6C5CE7"],
+];
+
+const TOP_RANK_STYLE = {
+  1: { color: "#5FB2FF", glow: "0 0 8px rgba(95,178,255,0.9), 0 0 22px rgba(95,178,255,0.5)" },
+  2: { color: "#B9C2CE", glow: "0 0 8px rgba(185,194,206,0.85), 0 0 20px rgba(185,194,206,0.4)" },
+  3: { color: "#E0A458", glow: "0 0 8px rgba(224,164,88,0.85), 0 0 20px rgba(224,164,88,0.4)" },
+};
+
+const INITIAL_DEMONS = [
+  { rank: 1, name: "Void Requiem", creator: "Nexus", verifier: "Kawaii Kilexu6", points: 500 },
+  { rank: 2, name: "Static Fracture", creator: "Ombra", verifier: "wkng", points: 480 },
+  { rank: 3, name: "Hollow Cadence", creator: "Prysm", verifier: "AndyXwGD", points: 462 },
+  { rank: 4, name: "Cinder Veil", creator: "Kataclysm", verifier: "Cooke", points: 445 },
+  { rank: 5, name: "Iron Sonnet", creator: "Vantablack", verifier: "Kawaii Vyrien", points: 429 },
+  { rank: 6, name: "Glass Meridian", creator: "Fenrix", verifier: "Kawaii Kilexu6", points: 414 },
+  { rank: 7, name: "Ashwake", creator: "Nullpoint", verifier: "wkng", points: 400 },
+  { rank: 8, name: "Obsidian Litany", creator: "Ferrow", verifier: "AndyXwGD", points: 387 },
+  { rank: 9, name: "Pale Ultimatum", creator: "Skarrow", verifier: "Cooke", points: 375 },
+  { rank: 10, name: "Wraithbound", creator: "Novaquartz", verifier: "Kawaii Vyrien", points: 363 },
+  { rank: 11, name: "Fault Line", creator: "Driftmark", verifier: "wkng", points: 352 },
+  { rank: 12, name: "Ember Constant", creator: "Halcyon", verifier: "AndyXwGD", points: 341 },
+  { rank: 13, name: "Quiet Detonation", creator: "Ruinark", verifier: "Cooke", points: 331 },
+  { rank: 14, name: "Last Isotope", creator: "Ghostreef", verifier: "Kawaii Kilexu6", points: 321 },
+  { rank: 15, name: "Marrow Signal", creator: "Vexstone", verifier: "wkng", points: 312 },
+];
+
+const LEADERBOARD = [
+  { rank: 1, name: "Kawaii Kilexu6", points: 4820, completions: 41 },
+  { rank: 2, name: "wkng", points: 4390, completions: 37 },
+  { rank: 3, name: "AndyXwGD", points: 4105, completions: 35 },
+  { rank: 4, name: "Cooke", points: 3877, completions: 33 },
+  { rank: 5, name: "Kawaii Vyrien", points: 3602, completions: 30 },
+  { rank: 6, name: "Fenrix", points: 2988, completions: 26 },
+  { rank: 7, name: "Ombra", points: 2714, completions: 24 },
+  { rank: 8, name: "Nullpoint", points: 2401, completions: 21 },
+];
+
+const INITIAL_STAFF = [
+  { name: "Kawaii Vyrien", role: "Owner", note: "Final say on list placement and disputes." },
+  { name: "Kawaii Kilexu6", role: "Admin", note: "Oversees moderation and record verification." },
+  { name: "Kawaii wkng", role: "Moderator", note: "Reviews submissions and verifies records." },
+  { name: "Kawaii Cooke", role: "Moderator", note: "Reviews submissions and verifies records." },
+  { name: "Kawaii AndyXwGD", role: "Moderator", note: "Reviews submissions and verifies records." },
+];
+
+const BASE_TABS = ["List", "Leaderboard", "Moderators", "Submit"];
+const ROLES = ["Owner", "Admin", "Moderator", "Member"];
+
+// ---- Background VFX ----
+function Backdrop() {
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#08080C]">
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+      <div className="orb orb-a" />
+      <div className="orb orb-b" />
+      <div className="orb orb-c" />
+      <div className="absolute inset-0 bg-[#08080C]/20" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(8,8,12,0) 0%, rgba(8,8,12,0.15) 40%, rgba(8,8,12,0.55) 75%, #08080C 100%)",
+        }}
+      />
+      <style>{`
+        @keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,-40px) scale(1.15); } }
+        @keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,50px) scale(1.1); } }
+        @keyframes drift3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,60px) scale(1.2); } }
+        .orb { position: absolute; border-radius: 9999px; filter: blur(110px); }
+        .orb-a { width: 480px; height: 480px; left: -120px; top: -100px; background: rgba(108,92,231,0.42); animation: drift1 16s ease-in-out infinite; }
+        .orb-b { width: 420px; height: 420px; right: -100px; top: 120px; background: rgba(52,214,196,0.32); animation: drift2 19s ease-in-out infinite; }
+        .orb-c { width: 380px; height: 380px; left: 30%; bottom: -160px; background: rgba(255,95,162,0.26); animation: drift3 21s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .orb { animation: none !important; } }
+      `}</style>
+    </div>
+  );
+}
+
+function Thumb({ rank, name, width = 128 }) {
+  const [c1, c2] = HUES[rank % HUES.length];
+  const height = Math.round(width * 9 / 16);
+  return (
+    <div
+      className="relative shrink-0 rounded-lg overflow-hidden ring-1 ring-white/10 group/thumb"
+      style={{ width, height, background: `linear-gradient(150deg, ${c1}, ${c2})` }}
+    >
+      <div
+        className="absolute inset-0 opacity-50"
+        style={{ backgroundImage: "repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 2px, transparent 2px 10px)" }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-2/3 h-2/3 opacity-25"
+        style={{ background: "rgba(255,255,255,0.9)", clipPath: "polygon(100% 20%, 30% 100%, 100% 100%)" }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%), inset 0 0 18px rgba(0,0,0,0.3)" }}
+      />
+      <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-sm rounded px-1.5 py-0.5 font-[JetBrains_Mono] text-[9px] text-white tracking-wide">
+        #{rank}
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+        <div className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center">
+          <div className="w-0 h-0 ml-0.5" style={{ borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "6px solid white" }} />
+        </div>
+      </div>
+      {name && (
+        <div className="absolute bottom-0 left-0 right-0 px-1.5 pb-1">
+          <div className="font-[Space_Grotesk] text-[9.5px] leading-tight text-white truncate drop-shadow-sm">{name}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Nav({ active, setActive, user, onLogout }) {
+  const tabs = [...BASE_TABS, user ? (user.role === "Owner" ? "Admin" : "Account") : "Login"];
+  return (
+    <header className="sticky top-0 z-20 bg-[#0B0B10]/70 backdrop-blur-md border-b border-white/[0.06]">
+      <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-16">
+        <div className="font-[Space_Grotesk] text-[17px] tracking-tight text-[#F4F3F8]">
+          bread level<span className="text-[#6C5CE7]">list</span>
+        </div>
+        <nav className="flex items-center gap-1">
+          {tabs.map((t) => (
+            <button
+              key={t}
+              onClick={() => setActive(t === "Account" ? "Login" : t)}
+              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all ${
+                active === t || (t === "Account" && active === "Login") ? "bg-white text-[#0B0B10]" : "text-[#8B8CA3] hover:text-[#F4F3F8]"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+          {user && (
+            <button onClick={onLogout} className="ml-1 px-3.5 py-1.5 text-[13px] font-medium rounded-full text-[#8B8CA3] hover:text-[#FF5FA2] transition-colors">
+              Log out
+            </button>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function Hero({ demonCount }) {
+  return (
+    <div className="max-w-5xl mx-auto px-6 pt-16 pb-10">
+      <p className="font-[JetBrains_Mono] text-[11px] tracking-[0.14em] text-[#34D6C4] mb-3">
+        RANKED EXTREME BREAD LEVEL LIST — TEST BUILD
+      </p>
+      <h1 className="font-[Space_Grotesk] text-[42px] sm:text-[56px] leading-[1.02] tracking-tight text-[#F4F3F8] max-w-2xl">
+        Ordered by difficulty.
+        <br />
+        <span className="bg-gradient-to-r from-[#6C5CE7] via-[#FF5FA2] to-[#34D6C4] bg-clip-text text-transparent">
+          Nothing else.
+        </span>
+      </h1>
+      <p className="mt-4 text-[15px] text-[#8B8CA3] max-w-md leading-relaxed">
+        Every level here has been beaten legitimately and placed by rank — hardest first. Points scale with position, not popularity.
+      </p>
+      <div className="mt-8 flex gap-8 font-[JetBrains_Mono]">
+        <div>
+          <div className="text-[22px] text-[#F4F3F8] leading-none">{demonCount}</div>
+          <div className="text-[11px] text-[#8B8CA3] mt-1">levels listed</div>
+        </div>
+        <div>
+          <div className="text-[22px] text-[#F4F3F8] leading-none">{LEADERBOARD.length}</div>
+          <div className="text-[11px] text-[#8B8CA3] mt-1">ranked players</div>
+        </div>
+        <div>
+          <div className="text-[22px] text-[#F4F3F8] leading-none">5</div>
+          <div className="text-[11px] text-[#8B8CA3] mt-1">staff members</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ListTab({ demons }) {
+  const max = demons[0].points;
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="border-t border-white/[0.07]">
+        {demons.map((d) => (
+          <div key={d.rank} className="group relative flex items-center gap-5 border-b border-white/[0.07] py-5 px-3 -mx-3 rounded-xl hover:bg-white/[0.03] transition-colors">
+            {TOP_RANK_STYLE[d.rank] ? (
+              <div className="relative w-14 shrink-0 select-none">
+                <div className="font-[JetBrains_Mono] text-[34px] leading-none font-bold" style={{ color: TOP_RANK_STYLE[d.rank].color, textShadow: TOP_RANK_STYLE[d.rank].glow }}>
+                  {String(d.rank).padStart(2, "0")}
+                </div>
+                <div className="absolute -top-2 left-0 w-8 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, ${TOP_RANK_STYLE[d.rank].color}, transparent)` }} />
+              </div>
+            ) : (
+              <div className="font-[JetBrains_Mono] text-[34px] leading-none text-white w-14 shrink-0 select-none">
+                {String(d.rank).padStart(2, "0")}
+              </div>
+            )}
+            <Thumb rank={d.rank} name={d.name} width={128} />
+            <div className="flex-1 min-w-0">
+              <div className="font-[Space_Grotesk] text-[17px] text-[#F4F3F8] truncate">{d.name}</div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-[12px] text-[#8B8CA3]">
+                <span><span className="text-[#5C5D75]">Created by</span> <span className="text-[#C9C9DA]">{d.creator}</span></span>
+                <span><span className="text-[#5C5D75]">Verified by</span> <span className="text-[#C9C9DA]">{d.verifier}</span></span>
+              </div>
+              <div className="mt-2.5 h-[3px] w-full max-w-[220px] bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${(d.points / max) * 100}%`, background: `linear-gradient(90deg, ${HUES[d.rank % HUES.length][0]}, ${HUES[d.rank % HUES.length][1]})` }} />
+              </div>
+            </div>
+            <div className="font-[JetBrains_Mono] text-[13px] text-[#F4F3F8] shrink-0">
+              {d.points}<span className="text-[#8B8CA3]"> pts</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardTab() {
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="border-t border-white/[0.07]">
+        <div className="grid grid-cols-[40px_1fr_100px_100px] gap-4 py-3 text-[11px] tracking-wide text-[#8B8CA3] font-[JetBrains_Mono]">
+          <div>#</div><div>PLAYER</div><div className="text-right">COMPLETIONS</div><div className="text-right">POINTS</div>
+        </div>
+        {LEADERBOARD.map((p) => (
+          <div key={p.rank} className="grid grid-cols-[40px_1fr_100px_100px] gap-4 items-center border-t border-white/[0.07] py-4 px-3 -mx-3 rounded-xl hover:bg-white/[0.03] transition-colors">
+            <div className="font-[JetBrains_Mono] text-[13px] text-[#8B8CA3]">{p.rank}</div>
+            <div className="font-[Space_Grotesk] text-[15px] text-[#F4F3F8]">{p.name}</div>
+            <div className="font-[JetBrains_Mono] text-[13px] text-right text-[#C9C9DA]">{p.completions}</div>
+            <div className="font-[JetBrains_Mono] text-[13px] text-right text-[#F4F3F8]">{p.points.toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ModeratorsTab({ staff }) {
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="border-t border-white/[0.07]">
+        {staff.map((s, i) => (
+          <div key={s.name} className="flex items-center gap-6 border-b border-white/[0.07] py-5 px-3 -mx-3 rounded-xl hover:bg-white/[0.03] transition-colors">
+            <div className="w-11 h-11 rounded-full flex items-center justify-center font-[Space_Grotesk] text-[14px] text-white shrink-0" style={{ background: `linear-gradient(140deg, ${HUES[i % HUES.length][0]}, ${HUES[i % HUES.length][1]})` }}>
+              {s.name.replace("Kawaii ", "").slice(0, 1)}
+            </div>
+            <div className="flex-1">
+              <div className="font-[Space_Grotesk] text-[16px] text-[#F4F3F8]">{s.name}</div>
+              <div className="text-[13px] text-[#8B8CA3] mt-0.5">{s.note}</div>
+            </div>
+            <div className="font-[JetBrains_Mono] text-[11px] tracking-wide text-[#6C5CE7] bg-[#6C5CE7]/10 px-2.5 py-1 rounded-full shrink-0">
+              {s.role.toUpperCase()}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SubmitTab() {
+  const [sent, setSent] = useState(false);
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="border-t border-white/[0.07] pt-8 max-w-lg">
+        <h2 className="font-[Space_Grotesk] text-[20px] text-[#F4F3F8] mb-1">Submit a record</h2>
+        <p className="text-[13.5px] text-[#8B8CA3] mb-6 leading-relaxed">
+          Records are reviewed by the moderator team before they're added to the leaderboard. This form is a placeholder — nothing is sent yet.
+        </p>
+        {sent ? (
+          <div className="border border-white/[0.1] rounded-xl p-5 text-[13.5px] text-[#F4F3F8] bg-white/[0.03]">
+            Submission queued for review. A moderator will check the footage before it's added.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <Field label="Level name" placeholder="e.g. Void Requiem" />
+            <Field label="Your username" placeholder="e.g. Fenrix" />
+            <Field label="Video proof (link)" placeholder="https://" />
+            <div>
+              <label className="text-[12px] text-[#8B8CA3] block mb-1.5">Notes for moderators</label>
+              <textarea rows={3} placeholder="Raw footage, device, anything worth flagging" className="w-full bg-white/[0.03] border border-white/[0.1] rounded-lg px-3 py-2 text-[13.5px] text-[#F4F3F8] placeholder:text-[#5C5D75] focus:outline-none focus:ring-2 focus:ring-[#6C5CE7]/40 focus:border-[#6C5CE7] resize-none" />
+            </div>
+            <button onClick={() => setSent(true)} className="bg-white text-[#0B0B10] text-[13.5px] font-medium px-5 py-2.5 rounded-full hover:bg-[#6C5CE7] hover:text-white transition-colors">
+              Send for review
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, placeholder, value, onValue, type = "text" }) {
+  return (
+    <div>
+      <label className="text-[12px] text-[#8B8CA3] block mb-1.5">{label}</label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onValue ? (e) => onValue(e.target.value) : undefined}
+        className="w-full bg-white/[0.03] border border-white/[0.1] rounded-lg px-3 py-2 text-[13.5px] text-[#F4F3F8] placeholder:text-[#5C5D75] focus:outline-none focus:ring-2 focus:ring-[#6C5CE7]/40 focus:border-[#6C5CE7]"
+      />
+    </div>
+  );
+}
+
+function MockRecaptcha({ checked, onCheck }) {
+  const [loading, setLoading] = useState(false);
+  const handleClick = () => {
+    if (checked || loading) return;
+    setLoading(true);
+    setTimeout(() => { setLoading(false); onCheck(true); }, 700);
+  };
+  return (
+    <div className="border border-white/[0.12] rounded-lg bg-white/[0.03] p-3 w-[260px] flex items-center gap-3">
+      <button type="button" onClick={handleClick} className="w-6 h-6 rounded border border-white/20 bg-white/[0.05] flex items-center justify-center shrink-0">
+        {loading && <div className="w-3.5 h-3.5 border-2 border-[#6C5CE7] border-t-transparent rounded-full animate-spin" />}
+        {checked && !loading && <span className="text-[#34D6C4] text-[14px] leading-none">✓</span>}
+      </button>
+      <div className="text-[12.5px] text-[#C9C9DA]">I'm not a robot</div>
+      <div className="ml-auto font-[JetBrains_Mono] text-[8px] text-[#5C5D75] leading-tight text-right">MOCK<br />CAPTCHA</div>
+    </div>
+  );
+}
+
+function LoginTab({ user, onLogin, onSignup }) {
+  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [captcha, setCaptcha] = useState(false);
+  const [discord, setDiscord] = useState(null);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState("");
+
+  if (user) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="border-t border-white/[0.07] pt-8 max-w-md">
+          <h2 className="font-[Space_Grotesk] text-[20px] text-[#F4F3F8] mb-1">Signed in</h2>
+          <p className="text-[13.5px] text-[#8B8CA3] mb-6">
+            You're logged in as <span className="text-[#F4F3F8]">{user.name}</span> · <span className="text-[#6C5CE7]">{user.role}</span>
+          </p>
+          {user.role !== "Owner" && (
+            <p className="text-[12.5px] text-[#5C5D75]">Only the owner account sees the admin panel. Everyone else gets a normal member session.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const connectDiscord = () => {
+    if (connecting || discord) return;
+    setConnecting(true);
+    setTimeout(() => { setConnecting(false); setDiscord(username ? `${username}#0421` : "member#0421"); }, 900);
+  };
+
+  const submit = () => {
+    setError("");
+    if (mode === "signup" && password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+    const result = mode === "login" ? onLogin(username, password) : onSignup(username, password);
+    if (!result.ok) setError(result.error);
+  };
+
+  const canSubmit = username && password && discord && captcha && (mode === "login" || confirm);
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="border-t border-white/[0.07] pt-8 max-w-md">
+        <div className="flex gap-1 mb-5 bg-white/[0.04] rounded-full p-1 w-fit">
+          <button onClick={() => { setMode("login"); setError(""); }} className={`px-3.5 py-1.5 text-[12.5px] rounded-full transition-colors ${mode === "login" ? "bg-white text-[#0B0B10]" : "text-[#8B8CA3]"}`}>Log in</button>
+          <button onClick={() => { setMode("signup"); setError(""); }} className={`px-3.5 py-1.5 text-[12.5px] rounded-full transition-colors ${mode === "signup" ? "bg-white text-[#0B0B10]" : "text-[#8B8CA3]"}`}>Sign up</button>
+        </div>
+        <h2 className="font-[Space_Grotesk] text-[20px] text-[#F4F3F8] mb-1">{mode === "login" ? "Log in" : "Create an account"}</h2>
+        <p className="text-[13.5px] text-[#8B8CA3] mb-6 leading-relaxed">
+          {mode === "login" ? "The owner logs in with their real password. Everyone else uses the account they signed up with." : "Accounts are saved in this browser's storage — sign up once, then log in anytime."}
+        </p>
+
+        <div className="space-y-4">
+          <Field label="Username" placeholder="e.g. Fenrix" onValue={setUsername} value={username} />
+          <Field label="Password" placeholder="••••••••" type="password" onValue={setPassword} value={password} />
+          {mode === "signup" && (
+            <Field label="Confirm password" placeholder="••••••••" type="password" onValue={setConfirm} value={confirm} />
+          )}
+
+          <div>
+            <label className="text-[12px] text-[#8B8CA3] block mb-1.5">Discord verification</label>
+            {discord ? (
+              <div className="flex items-center gap-2 text-[12.5px] text-[#34D6C4] bg-[#34D6C4]/10 border border-[#34D6C4]/20 rounded-lg px-3 py-2">
+                <span>✓</span> Connected as {discord}
+              </div>
+            ) : (
+              <button type="button" onClick={connectDiscord} className="w-full flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4a55d6] text-white text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors">
+                {connecting ? "Connecting…" : "Verify with Discord"}
+              </button>
+            )}
+            <p className="text-[11px] text-[#5C5D75] mt-1.5 leading-relaxed">
+              In production this uses Discord OAuth2 plus a bot that checks server membership and assigns your verified role automatically.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-[12px] text-[#8B8CA3] block mb-1.5">Verification</label>
+            <MockRecaptcha checked={captcha} onCheck={setCaptcha} />
+          </div>
+
+          {error && <p className="text-[12px] text-[#FF5FA2]">{error}</p>}
+
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={submit}
+            className="bg-white text-[#0B0B10] text-[13.5px] font-medium px-5 py-2.5 rounded-full hover:bg-[#6C5CE7] hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          >
+            {mode === "login" ? "Log in" : "Create account"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminTab({ demons, setDemons, staff, setStaff }) {
+  const [form, setForm] = useState({ name: "", creator: "", verifier: "", points: "" });
+  const [formError, setFormError] = useState("");
+  const [newStaffName, setNewStaffName] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState("Moderator");
+
+  const addLevel = () => {
+    if (!form.name.trim()) { setFormError("Level name is required."); return; }
+    if (!form.points.trim() || isNaN(Number(form.points))) { setFormError("Points must be a number."); return; }
+    setFormError("");
+    const points = Number(form.points);
+    const nextRank = demons.length + 1;
+    const updated = [...demons, { rank: nextRank, name: form.name, creator: form.creator || "Unknown", verifier: form.verifier || "Unverified", points }]
+      .sort((a, b) => b.points - a.points)
+      .map((d, i) => ({ ...d, rank: i + 1 }));
+    setDemons(updated);
+    setForm({ name: "", creator: "", verifier: "", points: "" });
+  };
+
+  const removeLevel = (rank) => {
+    const updated = demons.filter((d) => d.rank !== rank).sort((a, b) => b.points - a.points).map((d, i) => ({ ...d, rank: i + 1 }));
+    setDemons(updated);
+  };
+
+  const changeRole = (name, role) => setStaff(staff.map((s) => (s.name === name ? { ...s, role } : s)));
+  const removeStaff = (name) => setStaff(staff.filter((s) => s.name !== name));
+
+  const addStaff = () => {
+    if (!newStaffName.trim()) return;
+    setStaff([...staff, { name: newStaffName, role: newStaffRole, note: "Added by owner." }]);
+    setNewStaffName("");
+  };
+
+  const resetToDefaults = () => {
+    setDemons(INITIAL_DEMONS);
+    setStaff(INITIAL_STAFF);
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 pb-24">
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-[12px] text-[#5C5D75]">Levels and roles are saved in this browser's storage.</p>
+        <button onClick={resetToDefaults} className="text-[11.5px] text-[#8B8CA3] hover:text-[#FF5FA2] transition-colors">
+          Reset to defaults
+        </button>
+      </div>
+      <div className="grid gap-12 md:grid-cols-2">
+      <div>
+        <h2 className="font-[Space_Grotesk] text-[19px] text-[#F4F3F8] mb-1">Manage levels</h2>
+        <p className="text-[12.5px] text-[#8B8CA3] mb-5">Add a demon or remove one — the list re-ranks by points automatically.</p>
+        <div className="space-y-3 mb-6">
+          <Field label="Level name *" placeholder="e.g. Null Horizon" value={form.name} onValue={(v) => setForm({ ...form, name: v })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Creator" placeholder="e.g. Kataclysm" value={form.creator} onValue={(v) => setForm({ ...form, creator: v })} />
+            <Field label="Verifier" placeholder="e.g. Kawaii Vyrien" value={form.verifier} onValue={(v) => setForm({ ...form, verifier: v })} />
+          </div>
+          <Field label="Points *" placeholder="e.g. 350" value={form.points} onValue={(v) => setForm({ ...form, points: v })} />
+          {formError && <p className="text-[12px] text-[#FF5FA2]">{formError}</p>}
+          <button onClick={addLevel} className="bg-white text-[#0B0B10] text-[13px] font-medium px-4 py-2 rounded-full hover:bg-[#6C5CE7] hover:text-white transition-colors">
+            Add level
+          </button>
+        </div>
+        <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+          {demons.map((d) => (
+            <div key={d.rank} className="flex items-center justify-between text-[12.5px] border border-white/[0.08] rounded-lg px-3 py-2">
+              <span className="text-[#C9C9DA]">#{d.rank} · {d.name}</span>
+              <button onClick={() => removeLevel(d.rank)} className="text-[#FF5FA2] hover:text-[#ff8ab8] text-[11px]">Remove</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="font-[Space_Grotesk] text-[19px] text-[#F4F3F8] mb-1">Manage roles</h2>
+        <p className="text-[12.5px] text-[#8B8CA3] mb-5">Promote, demote, or remove staff members.</p>
+        <div className="space-y-2 mb-6">
+          {staff.map((s) => (
+            <div key={s.name} className="flex items-center gap-3 border border-white/[0.08] rounded-lg px-3 py-2">
+              <span className="text-[13px] text-[#F4F3F8] flex-1 truncate">{s.name}</span>
+              <select value={s.role} onChange={(e) => changeRole(s.name, e.target.value)} className="bg-white/[0.05] border border-white/[0.12] rounded-md text-[12px] text-[#C9C9DA] px-2 py-1 focus:outline-none">
+                {ROLES.map((r) => <option key={r} value={r} className="bg-[#14141C]">{r}</option>)}
+              </select>
+              <button onClick={() => removeStaff(s.name)} className="text-[#FF5FA2] hover:text-[#ff8ab8] text-[11px]">Remove</button>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder="New staff username" className="flex-1 bg-white/[0.03] border border-white/[0.1] rounded-lg px-3 py-2 text-[12.5px] text-[#F4F3F8] placeholder:text-[#5C5D75] focus:outline-none focus:ring-2 focus:ring-[#6C5CE7]/40 focus:border-[#6C5CE7]" />
+          <select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value)} className="bg-white/[0.05] border border-white/[0.12] rounded-md text-[12px] text-[#C9C9DA] px-2 focus:outline-none">
+            {ROLES.map((r) => <option key={r} value={r} className="bg-[#14141C]">{r}</option>)}
+          </select>
+          <button onClick={addStaff} className="bg-white text-[#0B0B10] text-[12.5px] font-medium px-3.5 rounded-lg hover:bg-[#6C5CE7] hover:text-white transition-colors">Add</button>
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+function DemonListSite() {
+  const [active, setActive] = useState("List");
+  const [demons, setDemons] = usePersistentState("gd_demons", INITIAL_DEMONS);
+  const [staff, setStaff] = usePersistentState("gd_staff", INITIAL_STAFF);
+  const [users, setUsers] = usePersistentState("gd_users", {});
+  const [user, setUser] = useState(null);
+
+  const handleLogin = (username, password) => {
+    const key = username.trim().toLowerCase();
+    if (key === OWNER_USERNAME && password === OWNER_PASSWORD) {
+      setUser({ name: "Kawaii Vyrien", role: "Owner" });
+      setActive("Admin");
+      return { ok: true };
+    }
+    const record = users[key];
+    if (!record || record.password !== password) {
+      return { ok: false, error: "Incorrect username or password." };
+    }
+    setUser({ name: record.username, role: record.role });
+    setActive("List");
+    return { ok: true };
+  };
+
+  const handleSignup = (username, password) => {
+    const key = username.trim().toLowerCase();
+    if (!username.trim()) return { ok: false, error: "Username is required." };
+    if (key === OWNER_USERNAME) return { ok: false, error: "That username is reserved." };
+    if (users[key]) return { ok: false, error: "That username is already taken." };
+    const updated = { ...users, [key]: { username, password, role: "Member" } };
+    setUsers(updated);
+    setUser({ name: username, role: "Member" });
+    setActive("List");
+    return { ok: true };
+  };
+
+  const handleLogout = () => { setUser(null); setActive("List"); };
+
+  return (
+    <div className="min-h-screen font-[Inter] text-[#F4F3F8]">
+      <Backdrop />
+      <Nav active={active} setActive={setActive} user={user} onLogout={handleLogout} />
+      <Hero demonCount={demons.length} />
+      {active === "List" && <ListTab demons={demons} />}
+      {active === "Leaderboard" && <LeaderboardTab />}
+      {active === "Moderators" && <ModeratorsTab staff={staff} />}
+      {active === "Submit" && <SubmitTab />}
+      {active === "Login" && <LoginTab user={user} onLogin={handleLogin} onSignup={handleSignup} />}
+      {active === "Admin" && user?.role === "Owner" && (
+        <AdminTab demons={demons} setDemons={setDemons} staff={staff} setStaff={setStaff} />
+      )}
+      <footer className="border-t border-white/[0.07] py-8">
+        <div className="max-w-5xl mx-auto px-6 text-[12px] text-[#8B8CA3]">
+          Data is saved in this browser's local storage. Discord verification and reCAPTCHA are UI mocks — a real deployment needs a backend.
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<DemonListSite />);
+</script>
+</body>
+</html>
