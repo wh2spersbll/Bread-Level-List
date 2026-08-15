@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AREDL | All Rated Extreme Demons List</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #12131c;
+      --bg-card-hover: #1a1c29;
+      --border-color: #23263b;
+      --accent-red: #ff3366;
+      --accent-orange: #ff6b35;
+      --accent-purple: #8a2be2;
+      --accent-cyan: #00e5ff;
+      --text-main: #f0f2f5;
+      --text-muted: #8c93a8;
+      --success: #00e676;
+      --warning: #ffb300;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Layout & Header */
+    header {
+      background: linear-gradient(180deg, rgba(255, 51, 102, 0.15) 0%, rgba(10, 10, 15, 0) 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(255, 51, 102, 0.15);
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0.5rem auto 0;
+      font-size: 0.95rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Stats Overview Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.25rem;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-red);
+      border-bottom-color: var(--accent-red);
+    }
+
+    /* Views Framework */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Leaderboard Tables */
+    .card-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: var(--bg-card-hover);
+    }
+
+    .rank-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      width: 60px;
+    }
+
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+
+    .level-title {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .level-publisher {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-points {
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    .badge-status-pending {
+      background: rgba(255, 179, 0, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(255, 179, 0, 0.3);
+    }
+
+    /* Verification Pipeline Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, select, textarea {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-red);
+    }
+
+    .checklist {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      accent-color: var(--accent-red);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .btn {
+      background: var(--accent-red);
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+    }
+
+    /* Helper Utilities */
+    .link {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-badge">AREDL Ecosystem</div>
+    <h1>All Rated Extreme Demons List</h1>
+    <p>Eliminating blanket difficulty ratings. Verified, community-driven real-time rankings for 100% of Geometry Dash's hardest levels.</p>
+  </header>
+
+  <div class="container">
+    
+    <!-- Metrics Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-label">Ranked Demons</span>
+        <span class="stat-value">542</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Verified Submissions</span>
+        <span class="stat-value">18,490</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Moderators</span>
+        <span class="stat-value">34</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Trust Moat Index</span>
+        <span class="stat-value" style="color: var(--success);">99.8%</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('levels')">Demons List (#1 - #N)</button>
+      <button class="tab-btn" onclick="switchTab('players')">Player Leaderboard</button>
+      <button class="tab-btn" onclick="switchTab('submit')">Submit Completion Proof</button>
+      <button class="tab-btn" onclick="switchTab('mod')">Moderator Queue</button>
+    </div>
+
+    <!-- TAB 1: DEMONS LIST -->
+    <div id="tab-levels" class="tab-content active">
+      <div class="card-panel">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Level Info</th>
+                <th>Publisher</th>
+                <th>Points Value</th>
+                <th>Verification</th>
+              </tr>
+            </thead>
+            <tbody id="levels-tbody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PLAYER LEADERBOARD -->
+    <div id="tab-players" class="tab-content">
+      <div class="card-panel">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Extreme Demons Cleared</th>
+                <th>Hardest Victory</th>
+                <th>Total Points</th>
+              </tr>
+            </thead>
+            <tbody id="players-tbody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PROOF SUBMISSION PIPELINE -->
+    <div id="tab-submit" class="tab-content">
+      <div class="card-panel">
+        <form class="form-grid" onsubmit="handleSubmission(event)">
+          <div class="form-group">
+            <label for="player-name">Player Name</label>
+            <input type="text" id="player-name" required placeholder="e.g. Zoink">
+          </div>
+
+          <div class="form-group">
+            <label for="level-select">Extreme Demon Completed</label>
+            <select id="level-select" required>
+              <option value="">Select a level...</option>
+              <option value="Tidal Wave">#1 - Tidal Wave</option>
+              <option value="Acheron">#2 - Acheron</option>
+              <option value="Silent Clubstep">#3 - Silent Clubstep</option>
+              <option value="Avernus">#4 - Avernus</option>
+              <option value="Limbo">#5 - Limbo</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="video-url">Raw Completion Video URL (YouTube / Twitch)</label>
+            <input type="url" id="video-url" required placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+
+          <div class="form-group full-width">
+            <label>Proof Verification Checklist (Required for anti-cheat audit)</label>
+            <div class="checklist">
+              <label class="checklist-item">
+                <input type="checkbox" required> Unedited raw video including full reaction and end screen
+              </label>
+              <label class="checklist-item">
+                <input type="checkbox" required> Audible clicks / taps synchronized clearly with video track
+              </label>
+              <label class="checklist-item">
+                <input type="checkbox" required> Cheat indicator or framerate log overlay visible
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <button type="submit" class="btn">Submit to Proof Verification Pipeline</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 4: MODERATOR QUEUE -->
+    <div id="tab-mod" class="tab-content">
+      <div class="card-panel">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Player</th>
+                <th>Level</th>
+                <th>Video Link</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="mod-tbody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Mock Data
+    const levelsData = [
+      { rank: 1, name: "Tidal Wave", creator: "OniLink", points: 500, video: "https://youtube.com" },
+      { rank: 2, name: "Acheron", creator: "ryami", points: 485, video: "https://youtube.com" },
+      { rank: 3, name: "Silent Clubstep", creator: "Nachtfly", points: 470, video: "https://youtube.com" },
+      { rank: 4, name: "Avernus", creator: "Pram3L", points: 455, video: "https://youtube.com" },
+      { rank: 5, name: "Limbo", creator: "MindCap & more", points: 440, video: "https://youtube.com" },
+      { rank: 6, name: "Kyouki", creator: "Demishow", points: 425, video: "https://youtube.com" },
+      { rank: 7, name: "Slaughterhouse", creator: "IcedCave", points: 410, video: "https://youtube.com" }
+    ];
+
+    const playersData = [
+      { rank: 1, name: "Zoink", cleared: 142, hardest: "Tidal Wave", points: 28450 },
+      { rank: 2, name: "w3i", cleared: 118, hardest: "Acheron", points: 22100 },
+      { rank: 3, name: "Doggie", cleared: 95, hardest: "Silent Clubstep", points: 19850 },
+      { rank: 4, name: "Trick", cleared: 88, hardest: "Avernus", points: 18200 }
+    ];
+
+    let pendingSubmissions = [
+      { id: "SUB-8091", player: "Viprin", level: "Limbo", url: "https://youtu.be/example1" },
+      { id: "SUB-8092", player: "Cursed", level: "Acheron", url: "https://youtu.be/example2" }
+    ];
+
+    // Initialize Page Data
+    document.addEventListener("DOMContentLoaded", () => {
+      renderLevels();
+      renderPlayers();
+      renderModQueue();
+    });
+
+    // Render Demons List
+    function renderLevels() {
+      const tbody = document.getElementById("levels-tbody");
+      tbody.innerHTML = levelsData.map(item => `
+        <tr>
+          <td class="rank-cell ${getRankClass(item.rank)}">#${item.rank}</td>
+          <td>
+            <div class="level-title">${item.name}</div>
+          </td>
+          <td><span class="level-publisher">${item.creator}</span></td>
+          <td><span class="badge badge-points">${item.points} pts</span></td>
+          <td><a href="${item.video}" target="_blank" class="link">Watch Verification</a></td>
+        </tr>
+      `).join("");
+    }
+
+    // Render Players
+    function renderPlayers() {
+      const tbody = document.getElementById("players-tbody");
+      tbody.innerHTML = playersData.map(player => `
+        <tr>
+          <td class="rank-cell ${getRankClass(player.rank)}">#${player.rank}</td>
+          <td style="font-weight: 600; color: #fff;">${player.name}</td>
+          <td>${player.cleared} Levels</td>
+          <td><span style="color: var(--accent-orange); font-weight: 500;">${player.hardest}</span></td>
+          <td><span class="badge badge-points">${player.points.toLocaleString()} pts</span></td>
+        </tr>
+      `).join("");
+    }
+
+    // Render Mod Queue
+    function renderModQueue() {
+      const tbody = document.getElementById("mod-tbody");
+      if (pendingSubmissions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No pending submissions in queue.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = pendingSubmissions.map((sub, index) => `
+        <tr>
+          <td style="font-family: 'JetBrains Mono'; font-size: 0.8rem;">${sub.id}</td>
+          <td style="font-weight: 600;">${sub.player}</td>
+          <td>${sub.level}</td>
+          <td><a href="${sub.url}" target="_blank" class="link">Open Video Log</a></td>
+          <td><span class="badge badge-status-pending">Under Audit</span></td>
+          <td>
+            <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--success);" onclick="resolveSubmission(${index}, true)">Approve</button>
+            <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #ff4d4d; border-color: #ff4d4d;" onclick="resolveSubmission(${index}, false)">Reject</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    // Submission Handler
+    function handleSubmission(e) {
+      e.preventDefault();
+      const player = document.getElementById('player-name').value;
+      const level = document.getElementById('level-select').value;
+      const url = document.getElementById('video-url').value;
+
+      const newSub = {
+        id: `SUB-${Math.floor(1000 + Math.random() * 9000)}`,
+        player,
+        level,
+        url
+      };
+
+      pendingSubmissions.push(newSub);
+      renderModQueue();
+
+      e.target.reset();
+      alert("Submission uploaded to Proof Verification Pipeline. Our moderators will review the frame logs shortly.");
+      switchTab('mod');
+    }
+
+    // Moderator Action
+    function resolveSubmission(index, approved) {
+      const sub = pendingSubmissions[index];
+      if (approved) {
+        alert(`Approved ${sub.player}'s completion of ${sub.level}! Dynamic database re-ranking triggered.`);
+      } else {
+        alert(`Rejected submission ${sub.id}.`);
+      }
+      pendingSubmissions.splice(index, 1);
+      renderModQueue();
+    }
+
+    function getRankClass(rank) {
+      if (rank === 1) return 'rank-1';
+      if (rank === 2) return 'rank-2';
+      if (rank === 3) return 'rank-3';
+      return '';
+    }
+  </script>
+</body>
+</html>
